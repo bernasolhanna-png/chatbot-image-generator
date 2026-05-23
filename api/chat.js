@@ -1,5 +1,5 @@
-// api/image.js — Vercel Serverless Function
-// Handles image generation requests using OpenAI DALL·E 3
+// api/chat.js — Vercel Serverless Function
+// Handles chat requests using OpenAI GPT-4o
 // API key is stored in Vercel Environment Variables as OPENAI_API_KEY
 
 export default async function handler(req, res) {
@@ -11,17 +11,14 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { prompt, size = '1024x1024' } = req.body;
+  const { system, messages } = req.body;
 
-  if (!prompt) {
-    return res.status(400).json({ error: 'Prompt is required' });
+  if (!messages || !Array.isArray(messages)) {
+    return res.status(400).json({ error: 'Invalid request: messages array required' });
   }
 
-  const validSizes = ['1024x1024', '1792x1024', '1024x1792'];
-  const imageSize = validSizes.includes(size) ? size : '1024x1024';
-
   try {
-    const response = await fetch('https://api.openai.com/v1/images/generations', {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -29,11 +26,12 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'dall-e-3',
-        prompt: prompt,
-        n: 1,
-        size: imageSize,
-        quality: 'standard'
+        model: 'gpt-4o',
+        max_tokens: 500,
+        messages: [
+          { role: 'system', content: system || 'You are a helpful Sephora beauty assistant.' },
+          ...messages
+        ]
       })
     });
 
@@ -43,15 +41,11 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: data.error.message });
     }
 
-    const imageUrl = data.data?.[0]?.url;
-    if (!imageUrl) {
-      return res.status(500).json({ error: 'No image URL returned from OpenAI' });
-    }
-
-    return res.status(200).json({ url: imageUrl });
+    const content = data.choices?.[0]?.message?.content || 'Sorry, I could not generate a response.';
+    return res.status(200).json({ content });
 
   } catch (err) {
-    console.error('Image API error:', err);
+    console.error('Chat API error:', err);
     return res.status(500).json({ error: 'Internal server error: ' + err.message });
   }
 }
