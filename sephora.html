@@ -302,7 +302,7 @@
   <div class="logo">💄</div>
   <div>
     <h1>Sephora AI Assistant</h1>
-    <p>Powered by OpenAI GPT-4 · DALL·E 3 · NLP + RAG</p>
+    <p>Powered by Groq Llama 3 · Pollinations AI · NLP + RAG</p>
   </div>
 </header>
 
@@ -339,15 +339,16 @@
   <!-- ── IMAGE PANEL ── -->
   <div id="image-panel" class="panel">
     <h2>🎨 AI Beauty Image Generator</h2>
-    <p class="sub">Generate stunning beauty and cosmetics visuals using DALL·E 3</p>
+    <p class="sub">Generate stunning beauty and cosmetics visuals using Pollinations AI</p>
 
     <div class="img-input-row">
       <input id="img-prompt" type="text" placeholder="e.g. luxurious red lipstick with rose petals, studio lighting..."
         onkeydown="if(event.key==='Enter') generateImage()" />
       <select id="img-size">
-        <option value="1024x1024">Square (1024×1024)</option>
-        <option value="1792x1024">Landscape (1792×1024)</option>
-        <option value="1024x1792">Portrait (1024×1792)</option>
+        <option value="512x512">Square (512×512)</option>
+        <option value="1024x1024">Large Square (1024×1024)</option>
+        <option value="1024x576">Landscape (1024×576)</option>
+        <option value="576x1024">Portrait (576×1024)</option>
       </select>
       <button class="gen-btn" id="gen-btn" onclick="generateImage()">✨ Generate</button>
     </div>
