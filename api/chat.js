@@ -1,9 +1,8 @@
 // api/chat.js — Vercel Serverless Function
-// Handles chat requests using OpenAI GPT-4o
-// API key is stored in Vercel Environment Variables as OPENAI_API_KEY
+// Uses Groq API (FREE) with Llama 3 — no quota issues
+// Store your key in Vercel: Settings > Environment Variables > GROQ_API_KEY
 
 export default async function handler(req, res) {
-  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -18,15 +17,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // OPENAI_API_KEY is set in Vercel Dashboard > Project > Settings > Environment Variables
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        // GROQ_API_KEY — set this in Vercel Dashboard > Settings > Environment Variables
+        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'llama3-8b-8192',
         max_tokens: 500,
         messages: [
           { role: 'system', content: system || 'You are a helpful Sephora beauty assistant.' },
