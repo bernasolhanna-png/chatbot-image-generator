@@ -1,8 +1,9 @@
-// api/chat.js — Vercel Serverless Function
-// Uses Groq API (FREE) with Llama 3 — no quota issues
-// Store your key in Vercel: Settings > Environment Variables > GROQ_API_KEY
+// api/image.js — Vercel Serverless Function
+// Handles image generation requests using OpenAI DALL·E 3
+// API key is stored in Vercel Environment Variables as OPENAI_API_KEY
 
 export default async function handler(req, res) {
+  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -10,27 +11,29 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { system, messages } = req.body;
+  const { prompt, size = '1024x1024' } = req.body;
 
-  if (!messages || !Array.isArray(messages)) {
-    return res.status(400).json({ error: 'Invalid request: messages array required' });
+  if (!prompt) {
+    return res.status(400).json({ error: 'Prompt is required' });
   }
 
+  const validSizes = ['1024x1024', '1792x1024', '1024x1792'];
+  const imageSize = validSizes.includes(size) ? size : '1024x1024';
+
   try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // GROQ_API_KEY — set this in Vercel Dashboard > Settings > Environment Variables
-        'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
+        // OPENAI_API_KEY is set in Vercel Dashboard > Project > Settings > Environment Variables
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'llama3-8b-8192',
-        max_tokens: 500,
-        messages: [
-          { role: 'system', content: system || 'You are a helpful Sephora beauty assistant.' },
-          ...messages
-        ]
+        model: 'dall-e-3',
+        prompt: prompt,
+        n: 1,
+        size: imageSize,
+        quality: 'standard'
       })
     });
 
@@ -40,11 +43,15 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: data.error.message });
     }
 
-    const content = data.choices?.[0]?.message?.content || 'Sorry, I could not generate a response.';
-    return res.status(200).json({ content });
+    const imageUrl = data.data?.[0]?.url;
+    if (!imageUrl) {
+      return res.status(500).json({ error: 'No image URL returned from OpenAI' });
+    }
+
+    return res.status(200).json({ url: imageUrl });
 
   } catch (err) {
-    console.error('Chat API error:', err);
+    console.error('Image API error:', err);
     return res.status(500).json({ error: 'Internal server error: ' + err.message });
   }
 }
