@@ -1,8 +1,9 @@
 // api/image.js — Vercel Serverless Function
-// Uses OpenAI DALL-E 2 (available on free/starter tier)
-// Store your key in Vercel: Settings > Environment Variables > OPENAI_API_KEY
+// Handles image generation requests using OpenAI DALL·E 3
+// API key is stored in Vercel Environment Variables as OPENAI_API_KEY
 
 export default async function handler(req, res) {
+  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -16,23 +17,23 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Prompt is required' });
   }
 
-  // DALL-E 2 supports: 256x256, 512x512, 1024x1024 only
-  const validSizes = ['256x256', '512x512', '1024x1024'];
-  const imageSize = validSizes.includes(size) ? size : '512x512';
+  const validSizes = ['1024x1024', '1792x1024', '1024x1792'];
+  const imageSize = validSizes.includes(size) ? size : '1024x1024';
 
   try {
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // OPENAI_API_KEY — set this in Vercel Dashboard > Settings > Environment Variables
+        // OPENAI_API_KEY is set in Vercel Dashboard > Project > Settings > Environment Variables
         'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
       },
       body: JSON.stringify({
-        model: 'dall-e-2',   // dall-e-2 works on free/starter OpenAI accounts
+        model: 'dall-e-3',
         prompt: prompt,
         n: 1,
-        size: imageSize
+        size: imageSize,
+        quality: 'standard'
       })
     });
 
